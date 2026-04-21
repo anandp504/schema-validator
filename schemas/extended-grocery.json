@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "extended-grocery.json",
+  "description": "Attempt to extend GroceryResource (unevaluatedProperties: false) with an 'organic' field via allOf. This will FAIL validation because GroceryResource's unevaluatedProperties: false rejects 'organic' — it was not evaluated within GroceryResource's own allOf scope.",
+  "type": "object",
+  "allOf": [
+    { "$ref": "grocery-resource-uneval-props.json" },
+    {
+      "type": "object",
+      "properties": {
+        "organic": {
+          "type": "object",
+          "properties": {
+            "certified":          { "type": "boolean" },
+            "certificationBody":  { "type": "string" }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "quantity.json",
+  "description": "Beckn core Quantity type (unitQuantity + unitText)",
+  "type": "object",
+  "properties": {
+    "unitQuantity": { "type": "number" },
+    "unitText":     { "type": "string" }
+  }
+}

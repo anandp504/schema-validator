@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "retail-resource-open.json",
+  "description": "RetailResource WITHOUT additionalProperties restriction — open/composable base schema intended to be extended via allOf.",
+  "type": "object",
+  "properties": {
+    "@context":  { "type": "string" },
+    "@type":     { "type": "string" },
+    "category":  { "type": "string" },
+    "rateable":  { "type": "boolean" },
+    "isActive":  { "type": "boolean", "default": true },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "brand":         { "type": "string" },
+        "originCountry": { "type": "string" }
+      }
+    },
+    "physical": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "weight": { "$ref": "quantity.json" },
+        "volume": { "$ref": "quantity.json" },
+        "dimensions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["unit", "length", "breadth", "height"],
+          "properties": {
+            "unit":    { "type": "string", "enum": ["MM", "CM", "M", "IN", "FT"] },
+            "length":  { "type": "number" },
+            "breadth": { "type": "number" },
+            "height":  { "type": "number" }
+          }
+        },
+        "appearance": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "color":    { "type": "string" },
+            "material": { "type": "string" },
+            "finish":   { "type": "string" }
+          }
+        }
+      }
+    },
+    "food": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "classification": { "type": "string", "enum": ["VEG", "NON_VEG", "EGG"] }
+      }
+    },
+    "packagedGoodsDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "manufacturerOrPacker": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type":    { "type": "string", "enum": ["MANUFACTURER", "PACKER"] },
+            "name":    { "type": "string" },
+            "id":      { "type": "string" },
+            "address": { "type": "string" }
+          }
+        },
+        "commonOrGenericName": { "type": "string" },
+        "netQuantity":         { "$ref": "quantity.json" },
+        "manufacturePackingImportDate": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "month": { "type": "integer", "minimum": 1, "maximum": 12 },
+            "year":  { "type": "integer", "minimum": 1900 }
+          }
+        }
+      }
+    },
+    "foodRegulatoryDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "registrations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "scheme": { "type": "string" },
+              "id":     { "type": "string" },
+              "role":   { "type": "string", "enum": ["BRAND_OWNER", "SELLER", "IMPORTER", "MANUFACTURER", "PACKER"] },
+              "url":    { "type": "string" }
+            }
+          }
+        },
+        "additives": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type":     { "type": "string", "enum": ["CONTAINS", "MAY_CONTAIN", "FREE_FROM", "MAX_ALLOWED", "PERCENTAGE", "CODE"] },
+              "value":    { "type": "string" },
+              "quantity": { "type": "string" },
+              "notes":    { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "credentials": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["uri"],
+        "properties": {
+          "type":   { "type": "string" },
+          "uri":    { "type": "string" },
+          "issuer": { "type": "string" },
+          "id":     { "type": "string" }
+        }
+      }
+    }
+  }
+}

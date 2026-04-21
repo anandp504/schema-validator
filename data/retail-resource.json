@@ -1,0 +1,17 @@
+{
+    "@context": "https://schema.beckn.io/RetailResource/v2.1/context.jsonld",
+    "@type": "RetailResource",
+    "identity": {
+        "brand": "Bru",
+        "originCountry": "IN"
+    },
+    "physical": {
+        "weight": {
+            "unitQuantity": 200,
+            "unitText": "G"
+        }
+    },
+    "food": {
+        "classification": "VEG"
+    }
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "grocery-resource-uneval-props.json",
+  "description": "GroceryResource using unevaluatedProperties: false (JSON Schema 2020-12). Extends an open RetailResource. unevaluatedProperties sees ALL properties evaluated by any allOf entry, so 'nutrition' and 'freshProduce' are accepted. CAVEAT: further extension via allOf (e.g. adding 'organic') is still blocked because this schema's unevaluatedProperties: false will reject the new field.",
+  "type": "object",
+  "unevaluatedProperties": false,
+  "allOf": [
+    { "$ref": "retail-resource-open.json" },
+    {
+      "type": "object",
+      "properties": {
+        "nutrition": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["nutrient", "value"],
+            "properties": {
+              "nutrient": { "type": "string" },
+              "value":    { "$ref": "quantity.json" }
+            }
+          }
+        },
+        "freshProduce": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "netQuantityDeclaration": { "type": "string" }
+          }
+        }
+      }
+    }
+  ]
+}

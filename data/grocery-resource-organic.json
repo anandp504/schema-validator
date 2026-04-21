@@ -1,0 +1,62 @@
+{
+    "@context": "https://schema.beckn.io/GroceryResource/v2.1/context.jsonld",
+    "@type": "GroceryResource",
+    "identity": {
+        "brand": "Bru",
+        "originCountry": "IN"
+    },
+    "physical": {
+        "weight": {
+            "unitQuantity": 200,
+            "unitText": "G"
+        }
+    },
+    "food": {
+        "classification": "VEG"
+    },
+    "packagedGoodsDeclaration": {
+        "manufacturerOrPacker": {
+            "type": "MANUFACTURER",
+            "name": "Hindustan Unilever Limited",
+            "id": "HUL-KA-1001",
+            "address": "HUL House, Mumbai, Maharashtra 400020"
+        },
+        "commonOrGenericName": "Instant Coffee and Chicory Powder",
+        "netQuantity": {
+            "unitQuantity": 200,
+            "unitText": "G"
+        },
+        "manufacturePackingImportDate": {
+            "month": 1,
+            "year": 2026
+        }
+    },
+    "foodRegulatoryDeclaration": {
+        "registrations": [
+            {
+                "scheme": "FSSAI",
+                "id": "10013022002253",
+                "role": "MANUFACTURER"
+            }
+        ],
+        "additives": [
+            {
+                "type": "FREE_FROM",
+                "quantity": "Artificial colours"
+            }
+        ]
+    },
+    "nutrition": [
+        {
+            "nutrient": "Energy",
+            "value": {
+                "unitQuantity": 287,
+                "unitText": "KCAL"
+            }
+        }
+    ],
+    "organic": {
+        "certified": true,
+        "certificationBody": "India Organic / NPOP"
+    }
+}
