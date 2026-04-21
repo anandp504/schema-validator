@@ -21,12 +21,12 @@ npm test
 ## Validate a file from the command line
 
 ```bash
-npm run validate -- <schema-id> <data-file>
+npm run validate -- schemas/<schema-file> <data-file>
 # or directly:
-node src/validator.js <schema-id> <data-file>
+node src/validator.js schemas/<schema-file> <data-file>
 ```
 
-`<schema-id>` is the filename of any schema in `schemas/`. `<data-file>` is a path to a JSON instance file.
+`<schema-file>` is any filename inside `schemas/`. The `schemas/` prefix is optional — a bare filename works too. `<data-file>` is a path to a JSON instance file.
 
 Exits with code `0` on success and `1` on failure, printing each error with its instance path and keyword.
 
@@ -60,8 +60,8 @@ All schemas live in `schemas/` as local JSON files (no remote `$ref` resolution 
 **Result:** FAIL
 
 ```bash
-npm run validate -- grocery-resource-addl-props.json data/grocery-resource.json
-# FAIL  data/grocery-resource.json  →  grocery-resource-addl-props.json
+npm run validate -- schemas/grocery-resource-addl-props.json data/grocery-resource.json
+# FAIL  data/grocery-resource.json  →  schemas/grocery-resource-addl-props.json
 #   [additionalProperties] (root) ("nutrition"): must NOT have additional properties
 #   [additionalProperties] (root) ("@context"): must NOT have additional properties
 #   ...
@@ -88,11 +88,11 @@ grocery-resource-addl-props.json
 **Data (fail):** `data/grocery-resource-unknown-field.json` → same schema → **FAIL**
 
 ```bash
-npm run validate -- grocery-resource-uneval-props.json data/grocery-resource.json
-# PASS  data/grocery-resource.json  →  grocery-resource-uneval-props.json
+npm run validate -- schemas/grocery-resource-uneval-props.json data/grocery-resource.json
+# PASS  data/grocery-resource.json  →  schemas/grocery-resource-uneval-props.json
 
-npm run validate -- grocery-resource-uneval-props.json data/grocery-resource-unknown-field.json
-# FAIL  data/grocery-resource-unknown-field.json  →  grocery-resource-uneval-props.json
+npm run validate -- schemas/grocery-resource-uneval-props.json data/grocery-resource-unknown-field.json
+# FAIL  data/grocery-resource-unknown-field.json  →  schemas/grocery-resource-uneval-props.json
 #   [unevaluatedProperties] (root) ("unknownField"): must NOT have unevaluated properties
 ```
 
@@ -116,12 +116,12 @@ grocery-resource-uneval-props.json
 **Data (pass):** `data/grocery-resource.json` → same schema → **PASS**
 
 ```bash
-npm run validate -- extended-grocery.json data/grocery-resource-organic.json
-# FAIL  data/grocery-resource-organic.json  →  extended-grocery.json
+npm run validate -- schemas/extended-grocery.json data/grocery-resource-organic.json
+# FAIL  data/grocery-resource-organic.json  →  schemas/extended-grocery.json
 #   [unevaluatedProperties] (root) ("organic"): must NOT have unevaluated properties
 
-npm run validate -- extended-grocery.json data/grocery-resource.json
-# PASS  data/grocery-resource.json  →  extended-grocery.json
+npm run validate -- schemas/extended-grocery.json data/grocery-resource.json
+# PASS  data/grocery-resource.json  →  schemas/extended-grocery.json
 ```
 
 `ExtendedGrocery` tries to add an `organic` field by composing `GroceryResource` via `allOf`. When AJV validates the instance against `GroceryResource` (as `allOf[0]`), the `organic` field is not evaluated within `GroceryResource`'s own `allOf` scope. `GroceryResource`'s `unevaluatedProperties: false` therefore rejects it, causing the whole validation to fail.
