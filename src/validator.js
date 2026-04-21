@@ -18,12 +18,13 @@ for (const file of schemaFiles) {
 
 /**
  * Validate data against a locally registered schema.
- * @param {string} schemaId - The $id of the schema (filename, e.g. 'grocery-resource-uneval-props.json')
+ * @param {string} schemaId - Schema filename or path, e.g. 'grocery-resource-uneval-props.json'
+ *                            or 'schemas/grocery-resource-uneval-props.json'. Directory prefix is ignored.
  * @param {object} data - The instance to validate
  * @returns {{ valid: boolean, errors: object[] }}
  */
 function validate(schemaId, data) {
-  const validateFn = ajv.getSchema(schemaId);
+  const validateFn = ajv.getSchema(path.basename(schemaId));
   if (!validateFn) throw new Error(`Schema '${schemaId}' not found`);
   const valid = validateFn(data);
   return { valid, errors: validateFn.errors ?? [] };
