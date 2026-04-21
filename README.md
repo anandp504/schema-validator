@@ -144,38 +144,18 @@ extended-grocery.json
 
 Three approaches solve the tension between strict validation and schema extensibility.
 
-### Option 1 — Thin "closed" wrappers _(most practical)_
+### Option 1 — Keep all schemas fully open _(simplest)_
 
-Keep every schema **open** (no property restriction). For each level add a companion `-closed` variant whose only job is to add `unevaluatedProperties: false` on top.
+Remove every `additionalProperties: false` and `unevaluatedProperties: false` from all schemas. Every schema just defines its properties; nothing more. Extension works freely at every level with no schema changes needed.
 
 ```
 schemas/
-  retail-resource.json          ← open — defines properties, meant to be extended
-  retail-resource-closed.json   ← strict — unevaluatedProperties: false + allOf [$ref retail-resource.json]
-
-  grocery-resource.json         ← open — allOf [$ref retail-resource.json] + nutrition
-  grocery-resource-closed.json  ← strict — unevaluatedProperties: false + allOf [$ref grocery-resource.json]
-
-  extended-grocery.json         ← open — allOf [$ref grocery-resource.json] + organic
-  extended-grocery-closed.json  ← strict — unevaluatedProperties: false + allOf [$ref extended-grocery.json]
+  retail-resource.json   ← defines identity, physical, food, … — no restriction
+  grocery-resource.json  ← allOf [$ref retail-resource.json] + nutrition — no restriction
+  extended-grocery.json  ← allOf [$ref grocery-resource.json] + organic — no restriction
 ```
 
-Every closed wrapper is a two-line schema:
-
-```json
-{
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "grocery-resource-closed.json",
-  "unevaluatedProperties": false,
-  "allOf": [{ "$ref": "grocery-resource.json" }]
-}
-```
-
-- **Composition** always references the **open** variant (`$ref: grocery-resource.json`).
-- **Validation** always uses the **closed** variant (`grocery-resource-closed.json`).
-- The closed wrapper's `unevaluatedProperties: false` sees the full property set from the entire `allOf` chain, so nothing valid gets rejected.
-
-**Trade-off:** Schema file count doubles. The convention of always validating against the `-closed` variant must be followed consistently.
+**Trade-off:** Unknown fields in instance data are never rejected. A payload carrying arbitrary extra properties will pass validation silently. Suitable when the protocol trusts its participants, or when unknown-field checking is handled at a different layer (e.g. an API gateway or a separate linting step).
 
 ---
 
@@ -197,19 +177,23 @@ This is the pattern already used in this project for the RetailResource → Groc
 
 ### Option 3 — `$dynamicRef` / `$dynamicAnchor` _(JSON Schema 2020-12, most elegant)_
 
-The built-in 2020-12 mechanism for schemas that are **open by default but closeable by the consumer**. The base schema defines a named extension point via `$dynamicAnchor` that defaults to allowing all extra properties (`{}`). A consuming schema overrides that anchor to `false`, closing the schema without modifying the base.
+The base schema defines a named **extension point** via `$dynamicAnchor` whose default value is `{}` (allow all). Any schema that wants strict validation overrides that anchor to `{ "not": {} }` (deny all). Intermediate schemas that are meant to be extended further leave the anchor alone — they do not define it at all.
 
-`retail-resource.json` — open by default:
+`$dynamicRef` resolution works by walking up the **evaluation call stack** and picking the outermost schema that defines the named anchor. This means the restriction is always applied by whoever is at the top of the chain — typically the final validation schema — without any change to the schemas below it.
+
+#### Schema layout
+
+`retail-resource.json` — base, defines the anchor and the dynamic ref:
 ```json
 {
   "$defs": {
     "extras": { "$dynamicAnchor": "extras" }
   },
-  "properties": { "identity": {}, "physical": {}, "..." : {} },
+  "properties": { "identity": {}, "physical": {}, "...": {} },
   "unevaluatedProperties": { "$dynamicRef": "#extras" }
 }
 ```
-The anchor `"extras"` resolves to `{}` (allow all) unless overridden.
+Default anchor value is `{}` → unevaluated properties pass. The anchor acts as an overrideable slot.
 
 `grocery-resource.json` — open, for composition:
 ```json
@@ -220,30 +204,61 @@ The anchor `"extras"` resolves to `{}` (allow all) unless overridden.
   ]
 }
 ```
-No anchor override → unevaluated properties pass through freely.
+No anchor override. `$dynamicRef` resolves to `retail-resource.json`'s own `{}` → permissive.
 
-`grocery-resource-closed.json` — strict, for validation:
+`grocery-resource-closed.json` — strict, for validating grocery data:
 ```json
 {
   "$defs": {
-    "closed": { "$dynamicAnchor": "extras", "not": {} }
+    "noExtras": { "$dynamicAnchor": "extras", "not": {} }
   },
+  "allOf": [{ "$ref": "grocery-resource.json" }]
+}
+```
+Overrides the anchor to `{ "not": {} }`. When `retail-resource.json`'s `$dynamicRef: "#extras"` is evaluated inside this context, it resolves to `{ "not": {} }` → unevaluated properties rejected.
+
+#### Extending further — e.g. adding an `organic` field
+
+`extended-grocery.json` — open, for composition (no anchor):
+```json
+{
   "allOf": [
-    { "$ref": "retail-resource.json" },
-    { "properties": { "nutrition": {}, "freshProduce": {} } }
+    { "$ref": "grocery-resource.json" },
+    { "properties": { "organic": {} } }
   ]
 }
 ```
-The `$dynamicAnchor: "extras"` override is picked up when `retail-resource.json`'s `$dynamicRef: "#extras"` is resolved, making unevaluated properties fail — with no changes to the base schema.
+Still no anchor override → permissive when used alone.
 
-**Trade-off:** Most powerful and avoids file proliferation, but `$dynamicRef` semantics are the most complex part of the 2020-12 spec and non-trivial to reason about.
+`extended-grocery-closed.json` — strict, for validating extended grocery data:
+```json
+{
+  "$defs": {
+    "noExtras": { "$dynamicAnchor": "extras", "not": {} }
+  },
+  "allOf": [{ "$ref": "extended-grocery.json" }]
+}
+```
+Yes — **the closed schema at each new level must define the anchor override**. This is the one piece of boilerplate that cannot be avoided. The open schemas in the chain never carry the anchor; only the schema actually used for validation does.
+
+#### How the anchor resolves at each level
+
+| Schema used for validation | Anchor resolved to | Unknown fields |
+|---|---|---|
+| `retail-resource.json` (directly) | `{}` (own default) | allowed |
+| `grocery-resource.json` | `{}` (no override) | allowed |
+| `grocery-resource-closed.json` | `{ "not": {} }` (override) | **rejected** |
+| `extended-grocery.json` | `{}` (no override) | allowed |
+| `extended-grocery-closed.json` | `{ "not": {} }` (override) | **rejected** |
+
+**Trade-off:** The most powerful option — open schemas stay completely untouched, and any consumer can close them by defining one anchor. However, `$dynamicRef` semantics are the most complex part of the 2020-12 spec and non-trivial to reason about.
 
 ---
 
 ### Comparison
 
-| | Extension works | Strict at every level | Complexity |
+| | Extension works | Unknown fields rejected | Complexity |
 |---|:---:|:---:|---|
-| Option 1 — closed wrappers | Yes | Yes | Low — extra files per level |
-| Option 2 — leaf-only convention | Yes | Leaf only | Low — naming convention |
-| Option 3 — `$dynamicRef` | Yes | Yes | High — advanced spec feature |
+| Option 1 — all open | Yes | No | None |
+| Option 2 — leaf-only convention | Yes | At leaf only | Low — naming convention |
+| Option 3 — `$dynamicRef` | Yes | Yes, via closed schema | High — advanced spec feature |
