@@ -58,7 +58,11 @@ if (require.main === module) {
     console.log(`FAIL  ${dataFile}  →  ${schemaId}`);
     for (const err of errors) {
       const where = err.instancePath || '(root)';
-      console.log(`  [${err.keyword}] ${where}: ${err.message}`);
+      const field =
+        err.params.additionalProperty  ? ` ("${err.params.additionalProperty}")` :
+        err.params.unevaluatedProperty ? ` ("${err.params.unevaluatedProperty}")` :
+        err.params.missingProperty     ? ` ("${err.params.missingProperty}")`     : '';
+      console.log(`  [${err.keyword}] ${where}${field}: ${err.message}`);
     }
     process.exit(1);
   }

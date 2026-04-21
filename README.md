@@ -62,7 +62,9 @@ All schemas live in `schemas/` as local JSON files (no remote `$ref` resolution 
 ```bash
 npm run validate -- grocery-resource-addl-props.json data/grocery-resource.json
 # FAIL  data/grocery-resource.json  →  grocery-resource-addl-props.json
-#   [additionalProperties] (root): must NOT have additional properties
+#   [additionalProperties] (root) ("nutrition"): must NOT have additional properties
+#   [additionalProperties] (root) ("@context"): must NOT have additional properties
+#   ...
 ```
 
 `additionalProperties` only considers `properties` defined **in the same schema object**. `GroceryResource` has `additionalProperties: false` at its top level but declares all its properties inside `allOf` subschemas, not in a top-level `properties` key. AJV treats every instance field as "additional" and rejects them all — including the base `identity` and `physical` fields inherited from `RetailResource`.
@@ -91,7 +93,7 @@ npm run validate -- grocery-resource-uneval-props.json data/grocery-resource.jso
 
 npm run validate -- grocery-resource-uneval-props.json data/grocery-resource-unknown-field.json
 # FAIL  data/grocery-resource-unknown-field.json  →  grocery-resource-uneval-props.json
-#   [unevaluatedProperties] (root): must NOT have unevaluated properties
+#   [unevaluatedProperties] (root) ("unknownField"): must NOT have unevaluated properties
 ```
 
 `unevaluatedProperties: false` (JSON Schema 2020-12) is aware of **all** properties evaluated by any `allOf` entry. Fields coming from `RetailResource` (via `allOf[0]`) and `nutrition`/`freshProduce` (via `allOf[1]`) are all considered "evaluated" and accepted. Only truly unrecognised fields are rejected.
@@ -116,7 +118,7 @@ grocery-resource-uneval-props.json
 ```bash
 npm run validate -- extended-grocery.json data/grocery-resource-organic.json
 # FAIL  data/grocery-resource-organic.json  →  extended-grocery.json
-#   [unevaluatedProperties] (root): must NOT have unevaluated properties
+#   [unevaluatedProperties] (root) ("organic"): must NOT have unevaluated properties
 
 npm run validate -- extended-grocery.json data/grocery-resource.json
 # PASS  data/grocery-resource.json  →  extended-grocery.json
